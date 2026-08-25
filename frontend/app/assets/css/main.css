@@ -1,0 +1,5 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root { --deep-twilight:#03045e; --french-blue:#023e8a; --turquoise-surf:#00b4d8; --light-cyan:#caf0f8; }
+body { background:var(--deep-twilight); color:var(--light-cyan); }

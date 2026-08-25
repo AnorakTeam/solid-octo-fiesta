@@ -1,0 +1,54 @@
+# Dependencies
+frontend/node_modules/
+backend/.venv/
+backend/venv/
+venv/
+
+# Nuxt / frontend build output
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/
+frontend/.cache/
+
+# Python cache and generated files
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Local databases and runtime files
+*.sqlite3
+*.db
+*.log
+media/
+staticfiles/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Docker local overrides
+docker-compose.override.yml
+backend/.env.example
