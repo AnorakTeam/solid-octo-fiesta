@@ -19,6 +19,25 @@ cd frontend && npm install && npm run dev
 
 La API queda en `http://localhost:8000` y Nuxt en `http://localhost:3000`.
 
+## Despliegue
+
+Backend (`solid-octo-fiesta.vercel.app`):
+
+```text
+DJANGO_SECRET_KEY=<secreto-aleatorio>
+DJANGO_DEBUG=0
+DJANGO_ALLOWED_HOSTS=solid-octo-fiesta.vercel.app
+CORS_ALLOWED_ORIGINS=https://solid-octo-fiesta-game.vercel.app
+```
+
+Frontend (`solid-octo-fiesta-game.vercel.app`):
+
+```text
+NUXT_PUBLIC_API_BASE=https://solid-octo-fiesta.vercel.app/api/v1
+```
+
+Después de cambiar `NUXT_PUBLIC_API_BASE`, hacer redeploy del frontend: Nuxt incorpora las variables `NUXT_PUBLIC_*` durante el build.
+
 ## API
 
 `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me/profile`, `GET /api/v1/game/state`, `POST /api/v1/game/sync` y `GET /api/v1/game/leaderboard`.
