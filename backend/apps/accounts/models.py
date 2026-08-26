@@ -7,5 +7,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self,email,password=None,**extra):
         extra.update(is_staff=True,is_superuser=True); return self.create_user(email,password,**extra)
 class User(AbstractBaseUser, PermissionsMixin):
-    email=models.EmailField(unique=True); nickname=models.CharField(max_length=40,unique=True); is_active=models.BooleanField(default=True); is_staff=models.BooleanField(default=False); date_joined=models.DateTimeField(auto_now_add=True)
+    email=models.EmailField(unique=True); nickname=models.CharField(max_length=40,unique=True)
+    profile_icon=models.FileField(upload_to='profile_icons/', blank=True, null=True)
+    is_active=models.BooleanField(default=True); is_staff=models.BooleanField(default=False); date_joined=models.DateTimeField(auto_now_add=True)
     objects=UserManager(); USERNAME_FIELD='email'; REQUIRED_FIELDS=[]
