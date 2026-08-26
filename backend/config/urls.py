@@ -7,6 +7,9 @@ from rest_framework.response import Response
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health(request): return Response({'status':'ok'})
-urlpatterns = [path('api/v1/health', health), path('api/v1/', include('apps.accounts.urls')), path('api/v1/', include('apps.game.urls'))]
+urlpatterns = [path('api/v1/health', health), 
+               path('api/v1/', include('apps.accounts.urls')), 
+               path('api/v1/', include('apps.game.urls'))
+               ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

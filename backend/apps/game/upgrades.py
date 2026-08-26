@@ -1,6 +1,7 @@
 from .models import PlayerUpgrade
 
-
+# NOTE: No se ha agregado aún a la BD, porque se implementaron las upgrades sólo
+# como concepto, tocaría primero nivelarlas y verificar que no estén... rotas? 
 UPGRADE_CATALOG = {
     PlayerUpgrade.Type.CLICKER: {
         'name': 'Clicker',
