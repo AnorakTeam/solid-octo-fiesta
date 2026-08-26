@@ -50,7 +50,7 @@ Después de cambiar `NUXT_PUBLIC_API_BASE`, hacer redeploy del frontend: Nuxt in
 
 `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me/profile`, `GET /api/v1/game/state`, `POST /api/v1/game/sync` y `GET /api/v1/game/leaderboard`.
 
-### Perfil
+### Perfil 
 
 `PATCH /api/v1/users/me/profile` usa autenticación JWT y acepta `multipart/form-data`:
 
