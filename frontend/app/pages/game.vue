@@ -1,12 +1,70 @@
 <script setup lang="ts">
+import { motion } from 'motion-v'
+
 definePageMeta({ middleware: 'auth' })
 
 const game = useGameStore()
 const auth = useAuthStore()
 const syncIntervalSeconds = 30
 const secondsUntilSync = ref(syncIntervalSeconds)
+const scoreShakeTick = ref(0)
+const hasIncrementedScore = ref(false)
 const syncProgress = computed(() => (secondsUntilSync.value / syncIntervalSeconds) * 100)
+const scoreShakeAnimation = computed(() => {
+  if (!hasIncrementedScore.value) {
+    return { x: 0, y: 0, rotate: 0, scale: 1 }
+  }
+
+  const direction = scoreShakeTick.value % 2 === 0 ? 1 : -1
+
+  return {
+    x: [0, -7 * direction, 6 * direction, -4 * direction, 3 * direction, 0],
+    y: [0, 2, -2, 1, -1, 0],
+    rotate: [0, -2 * direction, 2 * direction, -1 * direction, direction, 0],
+    scale: [1, 1.12, 0.98, 1.06, 1.01, 1],
+  }
+})
+const numberSpawner = ref<{
+  spawn: (options?: {
+    x?: number
+    y?: number
+    text?: string
+    duration?: number
+    rise?: number
+    fontSize?: number
+    color?: string
+    opacity?: number
+  }) => void
+} | null>(null)
+const milestoneConfetti = ref<{
+  burstFrom: (element: HTMLElement) => void
+} | null>(null)
 let syncTimer: ReturnType<typeof window.setInterval> | undefined
+
+function handleGameClick(event: MouseEvent) {
+  game.click()
+  hasIncrementedScore.value = true
+  scoreShakeTick.value++
+
+  if (
+    game.score > 0
+    && game.score % 100 === 0
+    && event.currentTarget instanceof HTMLElement
+  ) {
+    milestoneConfetti.value?.burstFrom(event.currentTarget)
+  }
+
+  numberSpawner.value?.spawn({
+    x: event.clientX,
+    y: event.clientY,
+    text: '+1',
+    duration: 1_800,
+    rise: 130,
+    fontSize: 34,
+    color: '#00b4d8',
+    opacity: 1,
+  })
+}
 
 function syncOnPageExit() {
   // A keepalive request can continue after the document starts unloading.
@@ -51,10 +109,21 @@ onUnmounted(() => {
           <NuxtLink class="text-xs font-bold text-cyan-300 hover:text-white" to="/profile">Editar perfil</NuxtLink>
         </div>
         <p class="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">Puntos</p>
-        <p class="mb-8 text-7xl font-black tracking-tight text-white sm:text-8xl">{{ game.score }}</p>
+        <motion.p
+          class="mb-8 text-7xl font-black tracking-tight text-white sm:text-8xl"
+          :animate="scoreShakeAnimation"
+          :transition="{
+            duration: 0.3,
+            ease: 'linear',
+            times: [0, 0.16, 0.34, 0.52, 0.72, 1],
+          }"
+        >
+          {{ game.score }}
+        </motion.p>
+        <ScoreMilestoneConfetti ref="milestoneConfetti" />
         <button
           class="h-48 w-48 rounded-full bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_0_45px_rgba(34,211,238,0.45)] transition hover:scale-105 hover:bg-cyan-300 active:scale-95"
-          @click="game.click">+1</button>
+          @click.stop="handleGameClick">+1</button>
         <div class="mt-8 flex items-center justify-center gap-4 text-sm font-semibold">
           <NuxtLink class="text-cyan-300 transition hover:text-white" to="/leaderboard">Ver ranking completo</NuxtLink>
           <span class="text-cyan-700">·</span>
@@ -64,6 +133,7 @@ onUnmounted(() => {
     </section>
 
     <GameTopRankings />
+    <FloatingNumberSpawner ref="numberSpawner" />
 
     <div class="fixed inset-x-0 bottom-0 z-10 border-t border-cyan-400/20 bg-[#03045e]/90 px-6 py-3 backdrop-blur">
       <div class="mx-auto flex w-full max-w-5xl items-center gap-4">

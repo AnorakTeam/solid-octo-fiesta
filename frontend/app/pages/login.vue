@@ -50,7 +50,7 @@ async function submit(event: FormSubmitEvent<LoginData>) {
 </script>
 
 <template>
-  <main class="relative grid min-h-screen place-items-center overflow-hidden bg-[#03045e] px-5 py-12">
+  <main class="relative grid min-h-screen place-items-center overflow-hidden px-5 py-12">
     <div class="pointer-events-none absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-[#00b4d8]/20 blur-3xl" />
     <div class="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[#023e8a]/70 blur-3xl" />
 
