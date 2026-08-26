@@ -1,1 +1,10 @@
-export default defineNuxtConfig({ modules: ['@pinia/nuxt', '@nuxt/ui', 'motion-v/nuxt'], css: ['~/assets/css/main.css'], runtimeConfig: { public: { apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1' } }, compatibilityDate: '2025-01-01' })
+export default defineNuxtConfig({
+  modules: ['@pinia/nuxt', '@nuxt/ui', 'motion-v/nuxt'],
+  css: ['~/assets/css/main.css'],
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1',
+    },
+  },
+  compatibilityDate: '2025-01-01',
+})
