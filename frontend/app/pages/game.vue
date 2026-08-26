@@ -40,6 +40,7 @@ const milestoneConfetti = ref<{
   burstFrom: (element: HTMLElement) => void
 } | null>(null)
 const scoreButton = ref<HTMLButtonElement | null>(null)
+const scoreDisplay = ref<HTMLElement | null>(null)
 const scoreEffectsReady = ref(false)
 let syncTimer: ReturnType<typeof window.setInterval> | undefined
 
@@ -49,6 +50,21 @@ watch(() => game.score, (newScore, previousScore) => {
   hasIncrementedScore.value = true
   scoreShakeTick.value++
 
+  if (scoreDisplay.value) {
+    const rect = scoreDisplay.value.getBoundingClientRect()
+    numberSpawner.value?.spawn({
+      x: rect.left + rect.width * 0.72,
+      y: rect.top + rect.height * 0.65,
+      text: `+${newScore - previousScore}`,
+      duration: 2_000,
+      rise: 145,
+      spread: 26,
+      fontSize: 36,
+      color: '#caf0f8',
+      opacity: 1,
+    })
+  }
+
   if (
     Math.floor(newScore / 100) > Math.floor(previousScore / 100)
     && scoreButton.value
@@ -57,18 +73,8 @@ watch(() => game.score, (newScore, previousScore) => {
   }
 })
 
-function handleGameClick(event: MouseEvent) {
+function handleGameClick() {
   game.click()
-  numberSpawner.value?.spawn({
-    x: event.clientX,
-    y: event.clientY,
-    text: '+1',
-    duration: 1_800,
-    rise: 130,
-    fontSize: 34,
-    color: '#00b4d8',
-    opacity: 1,
-  })
 }
 
 function syncOnPageExit() {
@@ -119,17 +125,19 @@ onUnmounted(() => {
           <NuxtLink class="text-xs font-bold text-cyan-300 hover:text-white" to="/profile">Editar perfil</NuxtLink>
         </div>
         <p class="mb-2 text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">Puntos</p>
-        <motion.p
-          class="mb-8 text-7xl font-black tracking-tight text-white sm:text-8xl"
-          :animate="scoreShakeAnimation"
-          :transition="{
-            duration: 0.3,
-            ease: 'linear',
-            times: [0, 0.16, 0.34, 0.52, 0.72, 1],
-          }"
-        >
-          {{ game.score }}
-        </motion.p>
+        <div ref="scoreDisplay" class="mb-8">
+          <motion.p
+            class="text-7xl font-black tracking-tight text-white sm:text-8xl"
+            :animate="scoreShakeAnimation"
+            :transition="{
+              duration: 0.3,
+              ease: 'linear',
+              times: [0, 0.16, 0.34, 0.52, 0.72, 1],
+            }"
+          >
+            {{ game.score }}
+          </motion.p>
+        </div>
         <ScoreMilestoneConfetti ref="milestoneConfetti" />
         <button
           ref="scoreButton"

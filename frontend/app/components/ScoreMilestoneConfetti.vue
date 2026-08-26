@@ -10,31 +10,44 @@ function burstFrom(element: HTMLElement) {
     y: (rect.top + rect.height / 2) / window.innerHeight,
   }
   const sharedOptions: ConfettiOptions = {
-    angle: 90,
-    spread: 68,
-    decay: 0.92,
-    gravity: 0.9,
+    decay: 0.91,
+    gravity: 0.82,
     origin,
     colors: [...bubbleColors],
-    shapes: ['square', 'circle'],
-    zIndex: 35,
+    shapes: ['square', 'circle', 'star'],
+    zIndex: 45,
     disableForReducedMotion: true,
   }
 
   void confetti({
     ...sharedOptions,
-    particleCount: 18,
-    startVelocity: 32,
-    ticks: 125,
-    scalar: 0.72,
+    particleCount: 38,
+    angle: 90,
+    spread: 100,
+    startVelocity: 42,
+    ticks: 160,
+    scalar: 0.88,
   })
 
   void confetti({
     ...sharedOptions,
-    particleCount: 8,
-    spread: 82,
-    startVelocity: 25,
-    ticks: 110,
+    particleCount: 14,
+    angle: 135,
+    spread: 48,
+    startVelocity: 34,
+    drift: -0.25,
+    ticks: 145,
+    scalar: 0.7,
+  })
+
+  void confetti({
+    ...sharedOptions,
+    particleCount: 14,
+    angle: 45,
+    spread: 48,
+    startVelocity: 34,
+    drift: 0.25,
+    ticks: 145,
     scalar: 1.05,
   })
 }

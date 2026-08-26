@@ -96,17 +96,17 @@ defineExpose({ spawn })
         color: number.color,
         fontSize: `${number.fontSize}px`,
       }"
-      :initial="{ opacity: 0, x: 0, y: 0, scale: 0.75, filter: 'blur(2px)' }"
+      :initial="{ opacity: 0, x: 0, y: 0, scale: 0.8, filter: 'blur(1px)' }"
       :animate="{
-        opacity: [0, number.opacity, number.opacity * 0.85, 0],
+        opacity: [0, number.opacity, number.opacity, 0],
         x: number.drift,
         y: -number.rise,
-        scale: [0.75, 1.1, 1],
-        filter: ['blur(2px)', 'blur(0px)', 'blur(4px)'],
+        scale: [0.8, 1.08, 1],
+        filter: ['blur(1px)', 'blur(0px)', 'blur(0px)'],
       }"
       :transition="{
         duration: number.duration / 1000,
-        times: [0, 0.12, 0.62, 1],
+        times: [0, 0.1, 0.82, 1],
         ease: 'easeOut',
       }"
       aria-hidden="true"
