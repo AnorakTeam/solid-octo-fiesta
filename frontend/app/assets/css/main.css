@@ -1,5 +1,36 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-:root { --deep-twilight:#03045e; --french-blue:#023e8a; --turquoise-surf:#00b4d8; --light-cyan:#caf0f8; }
-body { background:var(--deep-twilight); color:var(--light-cyan); }
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@font-face {
+  font-family: "M6x11 Plus";
+  src: url("../m6x11plus.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  size-adjust: 125%;
+}
+
+@theme {
+  --font-sans: "M6x11 Plus", monospace;
+}
+
+:root {
+  --deep-twilight: #03045e;
+  --french-blue: #023e8a;
+  --turquoise-surf: #00b4d8;
+  --light-cyan: #caf0f8;
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select {
+  font-family: "M6x11 Plus", monospace;
+}
+
+body {
+  background: var(--deep-twilight);
+  color: var(--light-cyan);
+}
