@@ -28,6 +28,14 @@ DJANGO_SECRET_KEY=<secreto-aleatorio>
 DJANGO_DEBUG=0
 DJANGO_ALLOWED_HOSTS=solid-octo-fiesta.vercel.app
 CORS_ALLOWED_ORIGINS=https://solid-octo-fiesta-game.vercel.app
+DATABASE_URL=<connection-string-de-supabase>
+```
+
+En Supabase, copia la cadena de conexión PostgreSQL desde **Project Settings > Database > Connection string**. Usa el modo **Session pooler** si tu proveedor serverless limita las conexiones. Configura `DATABASE_URL` como variable de entorno en Vercel y ejecuta las migraciones antes del primer uso:
+
+```bash
+cd backend
+DATABASE_URL="<connection-string-de-supabase>" python manage.py migrate
 ```
 
 Frontend (`solid-octo-fiesta-game.vercel.app`):

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY',
                        'dev-only-secret-key-change-me-32-bytes')
@@ -25,8 +26,12 @@ TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIR
     'django.template.context_processors.request', 'django.contrib.auth.context_processors.auth', 'django.contrib.messages.context_processors.messages']}}]
 WSGI_APPLICATION = 'config.wsgi.application'
 DB_ENGINE = os.getenv('DB_ENGINE', 'postgres').lower()
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DB_ENGINE == 'postgres':
+if DATABASE_URL:
+    DATABASES = {'default': dj_database_url.parse(
+        DATABASE_URL, conn_max_age=600, ssl_require=True)}
+elif DB_ENGINE == 'postgres':
     DATABASES = {'default': {'ENGINE': 'django.db.backends.postgresql', 'NAME': os.getenv('POSTGRES_DB', 'clicker'), 'USER': os.getenv(
         'POSTGRES_USER', 'clicker'), 'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'clicker'), 'HOST': os.getenv('POSTGRES_HOST', 'localhost'), 'PORT': os.getenv('POSTGRES_PORT', '5432')}}
 else:
