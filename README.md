@@ -27,7 +27,6 @@ Backend (`solid-octo-fiesta.vercel.app`):
 DJANGO_SECRET_KEY=<secreto-aleatorio>
 DJANGO_DEBUG=0
 DJANGO_ALLOWED_HOSTS=solid-octo-fiesta.vercel.app
-CORS_ALLOWED_ORIGINS=https://solid-octo-fiesta-game.vercel.app
 DATABASE_URL=<connection-string-de-supabase>
 ```
 
@@ -44,7 +43,7 @@ Frontend (`solid-octo-fiesta-game.vercel.app`):
 NUXT_PUBLIC_API_BASE=https://solid-octo-fiesta.vercel.app/api/v1
 ```
 
-Después de cambiar `NUXT_PUBLIC_API_BASE`, hacer redeploy del frontend: Nuxt incorpora las variables `NUXT_PUBLIC_*` durante el build.
+Después de cambiar `NUXT_PUBLIC_API_BASE`, hacer redeploy del frontend: Nuxt incorpora las variables `NUXT_PUBLIC_*` durante el build. El backend permite CORS desde cualquier origen y usa JWT en el header `Authorization`; no usa cookies cross-site.
 
 ## API
 
