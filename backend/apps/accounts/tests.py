@@ -28,4 +28,9 @@ class PublicLeaderboardTests(APITestCase):
         response = self.client.get('/api/v1/game/leaderboard')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data[0], {'position': 1, 'nickname': 'rank_player', 'score': 50})
+        self.assertEqual(response.data[0], {
+            'position': 1,
+            'nickname': 'rank_player',
+            'score': 50,
+            'profile_icon': None,
+        })

@@ -20,4 +20,13 @@ class LeaderboardView(generics.GenericAPIView):
     permission_classes=[permissions.AllowAny]; serializer_class=LeaderboardSerializer
     def get(self,request):
         rows=PlayerProgress.objects.select_related('user').order_by('-score','user__nickname')[:20]
-        return Response([{'position':i,'nickname':row.user.nickname,'score':row.score} for i,row in enumerate(rows,1)])
+        return Response([
+            {
+                'position': i,
+                'nickname': row.user.nickname,
+                'score': row.score,
+                'profile_icon': request.build_absolute_uri(row.user.profile_icon.url)
+                if row.user.profile_icon else None,
+            }
+            for i, row in enumerate(rows, 1)
+        ])
