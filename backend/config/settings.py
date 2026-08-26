@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY',
                        'dev-only-secret-key-change-me-32-bytes')
@@ -9,7 +9,7 @@ DEBUG = os.getenv('DJANGO_DEBUG', '1') == '1'
 # Vercel establece HTTP_HOST con el dominio público. No depender solamente de
 # DJANGO_ALLOWED_HOSTS: una variable antigua (por ejemplo "localhost") no debe
 # impedir que la función serverless atienda su propio dominio de Vercel.
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app', '.railway.app']
 ALLOWED_HOSTS += [
     host.strip()
     for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
