@@ -45,7 +45,7 @@ erDiagram
         string email UK
         string nickname UK
         string password_hash
-        file profile_icon NULL
+        string profile_icon
         boolean is_active
         boolean is_staff
         datetime date_joined
@@ -53,7 +53,7 @@ erDiagram
 
     PLAYER_PROGRESS {
         bigint id PK
-        bigint user_id FK_UK
+        bigint user_id FK
         bigint score
         datetime created_at
         datetime updated_at

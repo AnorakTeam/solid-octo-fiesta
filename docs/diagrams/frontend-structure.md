@@ -4,29 +4,36 @@
 
 ```mermaid
 flowchart TB
-    APP[app.vue<br/>fondo, logo y NuxtPage] --> PAGES
+    APP["app.vue: fondo, logo y NuxtPage"]
 
-    subgraph PAGES[Pages / rutas]
-        HOME[/ /]
-        LOGIN[/login]
-        REGISTER[/register]
-        GAME[/game<br/>requiere auth]
-        PROFILE[/profile<br/>requiere auth]
-        LEADERBOARD[/leaderboard]
+    subgraph PAGES["Páginas y rutas"]
+        HOME["/"]
+        LOGIN["/login"]
+        REGISTER["/register"]
+        GAME["/game: requiere autenticación"]
+        PROFILE["/profile: requiere autenticación"]
+        LEADERBOARD["/leaderboard"]
     end
+
+    APP --> HOME
+    APP --> LOGIN
+    APP --> REGISTER
+    APP --> GAME
+    APP --> PROFILE
+    APP --> LEADERBOARD
 
     GAME --> GM[useGameStore]
     GAME --> AU[useAuthStore]
     PROFILE --> AU
     LOGIN --> AU
-    REGISTER --> REG[POST /auth/register]
-    LEADERBOARD --> LB[GET /game/leaderboard]
+    REGISTER --> REG["POST /auth/register"]
+    LEADERBOARD --> LB["GET /game/leaderboard"]
 
-    subgraph COMPONENTS[Componentes de interfaz]
+    subgraph COMPONENTS["Componentes de interfaz"]
         TOP[GameTopRankings]
         UP[GameUpgradesPanel]
-        FX[FloatingNumberSpawner<br/>y ScoreMilestoneConfetti]
-        VIS[FloatingBubbleBackground<br/>y FloatingSiteLogo]
+        FX["FloatingNumberSpawner y ScoreMilestoneConfetti"]
+        VIS["FloatingBubbleBackground y FloatingSiteLogo"]
     end
 
     APP --> VIS
@@ -36,17 +43,17 @@ flowchart TB
     LOGIN --> TOP
     GM --> UP
 
-    MW[Middleware auth] --> AU
+    MW["Middleware auth"] --> AU
     GAME --> MW
     PROFILE --> MW
 
-    AU --> TOK[Cookies: access y refresh JWT]
-    AU --> API[apiFetch: Bearer JWT,<br/>refresh automático ante 401]
+    AU --> TOK["Cookies: access y refresh JWT"]
+    AU --> API["apiFetch: Bearer JWT y refresh automático ante 401"]
     GM --> API
     REG --> API
     LB --> API
     TOP --> API
-    API --> BACKEND[Django REST API]
+    API --> BACKEND["Django REST API"]
 ```
 
 `useAuthStore` gestiona los JWT, el perfil y la renovación del access token. `useGameStore` conserva el score y las mejoras en memoria, calcula la producción pasiva y sincroniza el score. La página de juego ejecuta esa sincronización cada 30 segundos, al abandonar la ruta y durante `pagehide`; antes de una compra también sincroniza el puntaje.
