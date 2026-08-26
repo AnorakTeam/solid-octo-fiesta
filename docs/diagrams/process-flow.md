@@ -58,8 +58,7 @@ sequenceDiagram
     end
 
     J->>F: Consultar ranking
-    F->>B: GET /api/v1/game/leaderboard
-    Note over F,B: Endpoint público; no requiere JWT
+    F->>B: GET /api/v1/game/leaderboard (público, sin JWT)
     B->>D: Ordenar PlayerProgress por score y nickname
     D-->>B: Top 20 con datos de usuario
     B-->>F: Ranking
