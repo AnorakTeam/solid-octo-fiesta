@@ -1,8 +1,9 @@
-from django.db.models import F
-from rest_framework import generics, permissions
+from django.db import transaction
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from .models import PlayerProgress
-from .serializers import ProgressSerializer,LeaderboardSerializer
+from .models import PlayerProgress, PlayerUpgrade
+from .serializers import ProgressSerializer, LeaderboardSerializer, UpgradeSerializer
+from .upgrades import UPGRADE_CATALOG, serialize_upgrades
 class StateView(generics.RetrieveAPIView):
     serializer_class=ProgressSerializer
     def get_object(self): return PlayerProgress.objects.get(user=self.request.user)
@@ -30,3 +31,45 @@ class LeaderboardView(generics.GenericAPIView):
             }
             for i, row in enumerate(rows, 1)
         ])
+
+
+class UpgradeStateView(generics.GenericAPIView):
+    serializer_class = UpgradeSerializer
+
+    def get(self, request):
+        return Response(serialize_upgrades(request.user))
+
+
+class UpgradePurchaseView(generics.GenericAPIView):
+    serializer_class = UpgradeSerializer
+
+    def post(self, request, upgrade_key):
+        definition = UPGRADE_CATALOG.get(upgrade_key)
+        if definition is None:
+            return Response(
+                {'detail': 'El upgrade solicitado no existe.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        with transaction.atomic():
+            progress = PlayerProgress.objects.select_for_update().get(user=request.user)
+            if progress.score < definition['cost']:
+                return Response(
+                    {'detail': 'No tienes puntos suficientes para este upgrade.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            progress.score -= definition['cost']
+            progress.save(update_fields=['score', 'updated_at'])
+
+            upgrade, _ = PlayerUpgrade.objects.select_for_update().get_or_create(
+                user=request.user,
+                upgrade_type=upgrade_key,
+            )
+            upgrade.quantity += 1
+            upgrade.save(update_fields=['quantity', 'updated_at'])
+
+        return Response({
+            'score': progress.score,
+            **serialize_upgrades(request.user),
+        })

@@ -39,21 +39,26 @@ const numberSpawner = ref<{
 const milestoneConfetti = ref<{
   burstFrom: (element: HTMLElement) => void
 } | null>(null)
+const scoreButton = ref<HTMLButtonElement | null>(null)
+const scoreEffectsReady = ref(false)
 let syncTimer: ReturnType<typeof window.setInterval> | undefined
 
-function handleGameClick(event: MouseEvent) {
-  game.click()
+watch(() => game.score, (newScore, previousScore) => {
+  if (!scoreEffectsReady.value || newScore <= previousScore) return
+
   hasIncrementedScore.value = true
   scoreShakeTick.value++
 
   if (
-    game.score > 0
-    && game.score % 100 === 0
-    && event.currentTarget instanceof HTMLElement
+    Math.floor(newScore / 100) > Math.floor(previousScore / 100)
+    && scoreButton.value
   ) {
-    milestoneConfetti.value?.burstFrom(event.currentTarget)
+    milestoneConfetti.value?.burstFrom(scoreButton.value)
   }
+})
 
+function handleGameClick(event: MouseEvent) {
+  game.click()
   numberSpawner.value?.spawn({
     x: event.clientX,
     y: event.clientY,
@@ -72,12 +77,15 @@ function syncOnPageExit() {
 }
 
 async function logout() {
+  game.stopPassiveIncome()
   await game.sync().catch(() => undefined)
   auth.logout()
 }
 
 onMounted(async () => {
   await Promise.all([auth.loadUser(), game.load()])
+  scoreEffectsReady.value = true
+  game.startPassiveIncome()
   syncTimer = window.setInterval(() => {
     if (secondsUntilSync.value <= 1) {
       secondsUntilSync.value = syncIntervalSeconds
@@ -91,17 +99,19 @@ onMounted(async () => {
 })
 
 onBeforeRouteLeave(async () => {
+  game.stopPassiveIncome()
   await game.sync().catch(() => undefined)
 })
 
 onUnmounted(() => {
+  game.stopPassiveIncome()
   if (syncTimer) clearInterval(syncTimer)
   window.removeEventListener('pagehide', syncOnPageExit)
 })
 </script>
 <template>
-  <main class="min-h-screen px-6 py-10 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-12 lg:px-12">
-    <section class="grid min-h-[60vh] place-items-center text-center">
+  <main class="min-h-screen px-6 py-10 lg:grid lg:grid-cols-[18rem_minmax(13rem,1fr)_20rem] lg:items-center lg:gap-6 lg:px-8 xl:grid-cols-[20rem_minmax(14rem,1fr)_22rem] xl:gap-10 xl:px-12">
+    <section class="grid min-h-[60vh] place-items-center text-center lg:col-start-2 lg:row-start-1">
       <div>
         <div class="mb-4 flex items-center justify-center gap-3 text-cyan-100">
           <img v-if="auth.user?.profile_icon" :src="auth.user.profile_icon" alt="Ícono de perfil" class="h-9 w-9 rounded-full object-cover ring-2 ring-cyan-300" />
@@ -122,6 +132,7 @@ onUnmounted(() => {
         </motion.p>
         <ScoreMilestoneConfetti ref="milestoneConfetti" />
         <button
+          ref="scoreButton"
           class="h-48 w-48 rounded-full bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_0_45px_rgba(34,211,238,0.45)] transition hover:scale-105 hover:bg-cyan-300 active:scale-95"
           @click.stop="handleGameClick">+1</button>
         <div class="mt-8 flex items-center justify-center gap-4 text-sm font-semibold">
@@ -132,7 +143,8 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <GameTopRankings />
+    <GameUpgradesPanel class="mt-8 lg:col-start-1 lg:row-start-1 lg:mt-0" />
+    <GameTopRankings class="mt-8 lg:col-start-3 lg:row-start-1 lg:mt-0" />
     <FloatingNumberSpawner ref="numberSpawner" />
 
     <div class="fixed inset-x-0 bottom-0 z-10 border-t border-cyan-400/20 bg-[#03045e]/90 px-6 py-3 backdrop-blur">
