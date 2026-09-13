@@ -1,0 +1,14 @@
+.git
+.gitignore
+.dockerignore
+node_modules
+.venv
+venv
+__pycache__
+*.pyc
+*.sqlite3
+dist
+.output
+.nuxt
+media/
+staticfiles/

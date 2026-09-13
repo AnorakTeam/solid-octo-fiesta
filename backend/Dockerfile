@@ -1,22 +1,24 @@
 FROM python:3.12-slim
 
-# Por ahora se dejará sqlite para no complicar el deployment
-# la principal preocupación realmente es el almacenamiento 
-# de las imágenes de perfil, pero por ahora con esto es suficiente
-# para el MVP.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DJANGO_DEBUG=0 \
-    DB_ENGINE=sqlite \
     PORT=8000
 
 WORKDIR /app
 
+# Instalar utilidades del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN python manage.py migrate --noinput
+
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT}"]
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
