@@ -38,8 +38,13 @@ done
 
 # Preparar archivo .env en frontend si no existe
 if [ ! -f frontend/.env ]; then
-    echo "ℹ️  No se encontró frontend/.env. Creando desde frontend/.env.dev..."
-    cp frontend/.env.dev frontend/.env
+    if [ -f frontend/.env.example ]; then
+        echo "ℹ️  No se encontró frontend/.env. Creando desde frontend/.env.example..."
+        cp frontend/.env.example frontend/.env
+    elif [ -f frontend/.env.dev ]; then
+        echo "ℹ️  No se encontró frontend/.env. Creando desde frontend/.env.dev..."
+        cp frontend/.env.dev frontend/.env
+    fi
 fi
 
 echo "🚀 Asegurando servicios de infraestructura (PostgreSQL y Redis)..."
