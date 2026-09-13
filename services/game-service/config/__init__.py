@@ -1,0 +1,1 @@
+# Game service config package
