@@ -1,0 +1,31 @@
+# ==============================================================================
+# Variables de configuración para Terraform (GCP)
+# Copia este archivo a 'terraform.tfvars' y completa con tus valores reales:
+# cp terraform.tfvars.example terraform.tfvars
+# ==============================================================================
+
+# ID del proyecto en Google Cloud (Obligatorio)
+gcp_project_id = "tu-proyecto-gcp-id"
+
+# Región y Zona (us-central1 es económica y suele aplicar al free tier)
+gcp_region = "us-central1"
+gcp_zone   = "us-central1-a"
+
+# Nombre de la aplicación y ambiente
+app_name    = "solid-octo"
+environment = "dev"
+
+# Tipo de máquina (e2-small = 2GB RAM ~$14/mes; e2-medium = 4GB RAM ~$27/mes)
+# Recomendado: e2-small con el swap de 2GB que instala automáticamente el startup.sh
+machine_type = "e2-small"
+
+# Disco de arranque (25GB pd-balanced o pd-standard)
+boot_disk_size_gb = 25
+boot_disk_type    = "pd-balanced"
+
+# Acceso SSH (opcional si usas 'gcloud compute ssh')
+ssh_user       = "ubuntu"
+ssh_public_key = "" # Ejemplo: "ssh-rsa AAAAB3NzaC1yc2E..."
+
+# Restringir accesos a IPs específicas si se desea (por defecto abierto a todo Internet)
+allowed_ingress_cidrs = ["0.0.0.0/0"]
