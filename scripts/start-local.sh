@@ -22,6 +22,12 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
+# Asegurar que NUXT_PUBLIC_API_BASE en .env use /api/v1 (soporte proxy interno sin CORS)
+if grep -q "NUXT_PUBLIC_API_BASE=http://localhost:8000/api/v1" .env 2>/dev/null; then
+    echo "ℹ️  Actualizando NUXT_PUBLIC_API_BASE a /api/v1 en .env..."
+    sed -i 's|NUXT_PUBLIC_API_BASE=http://localhost:8000/api/v1|NUXT_PUBLIC_API_BASE=/api/v1|' .env
+fi
+
 # Preparar archivos .env para cada microservicio si no existen
 for svc in identity-service game-service shop-service leaderboard-service; do
     if [ ! -f "services/$svc/.env" ] && [ -f "services/$svc/.env.example" ]; then

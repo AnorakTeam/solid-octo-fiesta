@@ -92,7 +92,10 @@ resource "google_compute_instance" "app_vm" {
     }
   }
 
-  metadata_startup_script = file("${path.module}/scripts/startup.sh")
+  metadata_startup_script = templatefile("${path.module}/scripts/startup.sh", {
+    git_repo_url = var.git_repository_url
+    git_branch   = var.git_branch
+  })
 
   metadata = {
     ssh-keys = var.ssh_public_key != "" ? "${var.ssh_user}:${var.ssh_public_key}" : null

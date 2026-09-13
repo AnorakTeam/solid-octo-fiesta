@@ -62,3 +62,15 @@ variable "allowed_ingress_cidrs" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "git_repository_url" {
+  description = "URL del repositorio Git a clonar y desplegar automáticamente en la VM."
+  type        = string
+  default     = "https://github.com/AnorakTeam/solid-octo-fiesta.git"
+}
+
+variable "git_branch" {
+  description = "Rama de Git a desplegar en la VM."
+  type        = string
+  default     = "main"
+}
