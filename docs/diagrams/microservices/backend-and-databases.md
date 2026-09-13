@@ -88,7 +88,7 @@ erDiagram
         datetime updated_at
     }
 
-    CUSTOM_USER -.->|"user_id (vía JWT)"| PLAYER_PROGRESS
-    CUSTOM_USER -.->|"user_id (vía JWT)"| PLAYER_UPGRADE
-    PLAYER_PROGRESS -.->|"evento asíncrono"| LEADERBOARD_ENTRY
+    CUSTOM_USER ||..|| PLAYER_PROGRESS : "user_id (via JWT)"
+    CUSTOM_USER ||..o{ PLAYER_UPGRADE : "user_id (via JWT)"
+    PLAYER_PROGRESS ||..|| LEADERBOARD_ENTRY : "evento asincrono"
 ```
