@@ -1,61 +1,137 @@
 # solid-octo-fiesta
 
-MVP clicker/idle con Nuxt 4 + TailwindCSS y Django REST Framework.
+Sistema Clicker/Idle con **Nuxt 4 + TailwindCSS** y arquitectura de **Microservicios en Django REST Framework + PostgreSQL + Redis + Nginx**.
 
-## Arranque rápido
+---
+
+## 🏛️ Arquitectura de Microservicios
+
+El sistema está dividido en microservicios independientes, desacoplados mediante bases de datos por servicio, autenticación JWT distribuida (stateless) y eventos asíncronos en Redis:
+
+```mermaid
+flowchart LR
+    F[Frontend Nuxt 4] --> GW[API Gateway / Nginx: 8000]
+
+    GW -->|/api/v1/auth/*, /api/v1/users/*, /media/*| ID[identity-service: 8001]
+    GW -->|/api/v1/game/state, /api/v1/game/sync| GAME[game-service: 8002]
+    GW -->|/api/v1/game/upgrades*| SHOP[shop-service: 8003]
+    GW -->|/api/v1/game/leaderboard| BOARD[leaderboard-service: 8004]
+
+    ID --> ID_DB[(identity_db)]
+    GAME --> GAME_DB[(game_db)]
+    SHOP --> SHOP_DB[(shop_db)]
+    BOARD --> BOARD_DB[(leaderboard_db)]
+
+    GAME -.->|score_updated| REDIS[(Redis Bus)]
+    ID -.->|profile_updated| REDIS
+    REDIS -.->|proyección asíncrona| BOARD
+    SHOP <-->|descuento atómico interno| GAME
+```
+
+### Servicios:
+1. **`gateway` (Nginx - Puerto 8000):**
+   - Enrutador inverso de entrada. Mantiene los contratos de API existentes para el cliente frontend sin romper rutas.
+2. **`identity-service` (Django - Puerto 8001):**
+   - Autenticación (registro, login, refresh, logout), usuario personalizado y actualización de perfil/avatares.
+   - Base de datos: `identity_db`.
+3. **`game-service` (Django - Puerto 8002):**
+   - Gestión de progreso (`PlayerProgress`), estado inicial (`/game/state`) y sincronizaciones de alta frecuencia (`/game/sync`).
+   - Emite eventos `score_updated` al bus Redis para mantener actualizado el ranking sin bloquear la base de datos de juego.
+   - Expone endpoint interno protegido `/api/v1/internal/deduct-points` para compras de mejoras.
+   - Base de datos: `game_db`.
+4. **`shop-service` (Django - Puerto 8003):**
+   - Catálogo de mejoras (`clicker`, `static`, `spammer`) e inventario de mejoras por jugador (`PlayerUpgrade`).
+   - Verifica saldo con `game-service` y registra compras de forma aislada.
+   - Base de datos: `shop_db`.
+5. **`leaderboard-service` (Django - Puerto 8004):**
+   - Proyección de ranking de lectura ultra-rápida (`LeaderboardEntry`).
+   - Un worker en segundo plano consume eventos de Redis (`score_updated`, `profile_updated`, `user_registered`) y actualiza su base de datos de lectura de forma asíncrona (CQRS).
+   - Base de datos: `leaderboard_db`.
+6. **`frontend` (Nuxt 4 - Puerto 3000):**
+   - Aplicación SSR/SPA en Nuxt 4 que consume la API a través del API Gateway.
+
+---
+
+## 🚀 Arranque Rápido con Docker
+
+Para levantar toda la arquitectura de microservicios en tu máquina local:
 
 ```bash
-docker compose up -d db
-cd backend && python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate && python manage.py runserver
+bash scripts/start-local.sh
 ```
 
-En otra terminal:
+El script preparará los `.env` necesarios, construirá las imágenes y levantará todos los contenedores:
+- **Frontend (Nuxt):** [http://localhost:3000](http://localhost:3000)
+- **API Gateway:** [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+- **Identity Service:** [http://localhost:8001](http://localhost:8001)
+- **Game Service:** [http://localhost:8002](http://localhost:8002)
+- **Shop Service:** [http://localhost:8003](http://localhost:8003)
+- **Leaderboard Service:** [http://localhost:8004](http://localhost:8004)
+- **PostgreSQL:** `localhost:5432` (con `identity_db`, `game_db`, `shop_db`, `leaderboard_db`)
+- **Redis:** `localhost:6379`
+
+### Comandos útiles:
 
 ```bash
-cd frontend && npm install && npm run dev
+# Ver logs en vivo de todos los servicios
+sudo docker compose logs -f
+
+# Ver logs de un microservicio específico
+sudo docker compose logs -f identity-service
+sudo docker compose logs -f game-service
+sudo docker compose logs -f shop-service
+sudo docker compose logs -f leaderboard-service
+sudo docker compose logs -f gateway
+
+# Crear un superusuario de Django en identity-service
+bash scripts/create-superuser.sh
+
+# Detener los contenedores
+bash scripts/stop-local.sh
 ```
 
-La API queda en `http://localhost:8000` y Nuxt en `http://localhost:3000`.
+---
 
-## Despliegue
+## 🚢 Despliegue Independiente de Microservicios
 
-Backend (`solid-octo-fiesta.vercel.app`):
+Cada microservicio en `services/<nombre-servicio>` es completamente autónomo y cuenta con:
+- Su propio `Dockerfile`.
+- Su propio `requirements.txt`.
+- Su propio `entrypoint.sh` con migraciones automáticas.
+- Su propio archivo `.env.example`.
+- Compatibilidad total con PostgreSQL local y remoto (`DATABASE_URL`, `DB_SSL_REQUIRE=1` para Supabase, Neon, RDS, etc.).
 
-```text
-DJANGO_SECRET_KEY=<secreto-aleatorio>
-DJANGO_DEBUG=0
-DJANGO_ALLOWED_HOSTS=solid-octo-fiesta.vercel.app
-DATABASE_URL=<connection-string-de-supabase>
-```
-
-En Supabase, copia la cadena de conexión PostgreSQL desde **Project Settings > Database > Connection string**. Usa el modo **Session pooler** si tu proveedor serverless limita las conexiones. Configura `DATABASE_URL` como variable de entorno en Vercel y ejecuta las migraciones antes del primer uso:
+### Construcción de imágenes Docker individuales:
 
 ```bash
-cd backend
-DATABASE_URL="<connection-string-de-supabase>" python manage.py migrate
+# Gateway
+docker build -t solid-octo-gateway ./services/gateway
+
+# Identity Service
+docker build -t solid-octo-identity ./services/identity-service
+
+# Game Progress Service
+docker build -t solid-octo-game ./services/game-service
+
+# Shop Service
+docker build -t solid-octo-shop ./services/shop-service
+
+# Leaderboard Service
+docker build -t solid-octo-leaderboard ./services/leaderboard-service
+
+# Frontend
+docker build -t solid-octo-frontend ./frontend
 ```
 
-Frontend (`solid-octo-fiesta-game.vercel.app`):
+---
 
-```text
-NUXT_PUBLIC_API_BASE=https://solid-octo-fiesta.vercel.app/api/v1
-```
+## 🔐 Seguridad y Autenticación Distribuida
 
-Después de cambiar `NUXT_PUBLIC_API_BASE`, hacer redeploy del frontend: Nuxt incorpora las variables `NUXT_PUBLIC_*` durante el build. El backend permite CORS desde cualquier origen y usa JWT en el header `Authorization`; no usa cookies cross-site.
+- **SimpleJWT Compartido:** `identity-service` emite los tokens JWT firmados con `JWT_SIGNING_KEY`. Los demás microservicios (`game-service`, `shop-service`) validan el token de forma puramente criptográfica (stateless), extrayendo `user_id` y `nickname` sin necesidad de consultar la base de datos de usuarios en cada petición.
+- **Comunicación Interna:** Las llamadas directas entre microservicios (como el descuento de puntos entre `shop-service` y `game-service`) se protegen mediante el header `X-Internal-Secret: <INTERNAL_API_SECRET>`.
 
-## API
+---
 
-`POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/users/me`, `PATCH /api/v1/users/me/profile`, `GET /api/v1/game/state`, `POST /api/v1/game/sync`, `GET /api/v1/game/leaderboard`, `GET /api/v1/game/upgrades` y `POST /api/v1/game/upgrades/:key/purchase`.
+## ☁️ Infraestructura en la Nube (GCP + Terraform)
 
-### Perfil 
-
-`PATCH /api/v1/users/me/profile` usa autenticación JWT y acepta `multipart/form-data`:
-
-```text
-nickname: nuevo_nombre
-profile_icon: archivo opcional (JPG, PNG o WebP; máximo 2 MB)
-```
-
-El endpoint identifica al jugador mediante el JWT y solamente actualiza su entidad `User`; su `PlayerProgress` y score no se modifican.
+Para desplegar la arquitectura completa en Google Cloud Platform con una máquina virtual Compute Engine de bajo costo (`e2-small` con Swap) y una **IP pública estática**, consulta la guía detallada en [infra/README.md](infra/README.md).
