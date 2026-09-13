@@ -7,6 +7,7 @@ venv/
 # Nuxt / frontend build output
 frontend/.nuxt/
 frontend/.output/
+frontend/dist
 frontend/dist/
 frontend/.cache/
 
@@ -52,3 +53,18 @@ Thumbs.db
 # Docker local overrides
 docker-compose.override.yml
 backend/.env.example
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc

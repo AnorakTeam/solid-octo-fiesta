@@ -1,11 +1,198 @@
 services:
   db:
     image: postgres:16-alpine
+    container_name: solid_octo_db
     environment:
-      POSTGRES_DB: clicker
-      POSTGRES_USER: clicker
-      POSTGRES_PASSWORD: clicker
-    ports: ["5432:5432"]
-    volumes: [postgres_data:/var/lib/postgresql/data]
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: ${POSTGRES_USER:-clicker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clicker}
+      POSTGRES_MULTIPLE_DATABASES: "identity_db,game_db,shop_db,leaderboard_db"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-clicker} -d identity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: solid_octo_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  identity-service:
+    build:
+      context: ./services/identity-service
+      dockerfile: Dockerfile
+    container_name: solid_octo_identity
+    environment:
+      DJANGO_SECRET_KEY: ${IDENTITY_SECRET_KEY:-identity-secret-key-for-dev-123456}
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-shared-jwt-signing-key-for-microservices-123456}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DB_ENGINE: postgres
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: ${POSTGRES_USER:-clicker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clicker}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DB_SSL_REQUIRE: ${DB_SSL_REQUIRE:-0}
+      REDIS_URL: redis://redis:6379/0
+      SERVE_MEDIA: 1
+    volumes:
+      - identity_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  game-service:
+    build:
+      context: ./services/game-service
+      dockerfile: Dockerfile
+    container_name: solid_octo_game
+    environment:
+      DJANGO_SECRET_KEY: ${GAME_SECRET_KEY:-game-secret-key-for-dev-123456}
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-shared-jwt-signing-key-for-microservices-123456}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-internal-shared-secret-key-123456}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DB_ENGINE: postgres
+      POSTGRES_DB: game_db
+      POSTGRES_USER: ${POSTGRES_USER:-clicker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clicker}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DB_SSL_REQUIRE: ${DB_SSL_REQUIRE:-0}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  shop-service:
+    build:
+      context: ./services/shop-service
+      dockerfile: Dockerfile
+    container_name: solid_octo_shop
+    environment:
+      DJANGO_SECRET_KEY: ${SHOP_SECRET_KEY:-shop-secret-key-for-dev-123456}
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-shared-jwt-signing-key-for-microservices-123456}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-internal-shared-secret-key-123456}
+      GAME_SERVICE_URL: http://game-service:8002
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DB_ENGINE: postgres
+      POSTGRES_DB: shop_db
+      POSTGRES_USER: ${POSTGRES_USER:-clicker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clicker}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DB_SSL_REQUIRE: ${DB_SSL_REQUIRE:-0}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      game-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  leaderboard-service:
+    build:
+      context: ./services/leaderboard-service
+      dockerfile: Dockerfile
+    container_name: solid_octo_leaderboard
+    environment:
+      DJANGO_SECRET_KEY: ${LEADERBOARD_SECRET_KEY:-leaderboard-secret-key-for-dev-123456}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DB_ENGINE: postgres
+      POSTGRES_DB: leaderboard_db
+      POSTGRES_USER: ${POSTGRES_USER:-clicker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clicker}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DB_SSL_REQUIRE: ${DB_SSL_REQUIRE:-0}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: solid_octo_gateway
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      game-service:
+        condition: service_healthy
+      shop-service:
+        condition: service_healthy
+      leaderboard-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8000/api/v1}
+    container_name: solid_octo_frontend
+    environment:
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8000/api/v1}
+      PORT: 3000
+      HOST: 0.0.0.0
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  identity_media:
