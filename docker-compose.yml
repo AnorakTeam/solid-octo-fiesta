@@ -181,10 +181,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8000/api/v1}
+        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api/v1}
     container_name: solid_octo_frontend
     environment:
-      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8000/api/v1}
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api/v1}
+      GATEWAY_URL: http://gateway:8000
       PORT: 3000
       HOST: 0.0.0.0
     ports:
