@@ -2,6 +2,10 @@
 
 Sistema Clicker/Idle con **Nuxt 4 + TailwindCSS** y arquitectura de **Microservicios en Django REST Framework + PostgreSQL + Redis + Nginx**.
 
+[![Vídeo de muestra, con la migración a microservicios realizada y puesta en prueba](https://img.youtube.com/vi/TveN0HJzLfk/maxresdefault.jpg)](https://youtu.be/TveN0HJzLfk)
+
+[Link directo](https://youtu.be/TveN0HJzLfk)
+
 ---
 
 ## 🏛️ Arquitectura de Microservicios
